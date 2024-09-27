@@ -6,5 +6,7 @@ import (
 )
 
 func main() {
-	plugin.Serve(&plugin.ServeOpts{PluginFunc: backstage.Plugin})
+	plugin.Serve(&plugin.ServeOpts{
+		PluginFunc: backstage.Plugin,
+	})
 }

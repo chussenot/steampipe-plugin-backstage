@@ -4,6 +4,8 @@ go 1.23
 
 toolchain go1.23.1
 
+require github.com/turbot/steampipe-plugin-sdk/v5 v5.10.4
+
 require (
 	cloud.google.com/go v0.112.0 // indirect
 	cloud.google.com/go/compute v1.24.0 // indirect
@@ -74,7 +76,7 @@ require (
 	github.com/tdabasinskas/go-backstage/v2 v2.5.1 // indirect
 	github.com/tkrajina/go-reflector v0.5.6 // indirect
 	github.com/turbot/go-kit v0.10.0-rc.0 // indirect
-	github.com/turbot/steampipe-plugin-sdk/v5 v5.10.4 // indirect
+	github.com/turbot/steampipe-plugin-sdk v1.8.3 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/zclconf/go-cty v1.14.4 // indirect
 	go.opencensus.io v0.24.0 // indirect
