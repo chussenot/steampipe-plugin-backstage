@@ -51,6 +51,5 @@ func listComponents(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateD
 			break
 		}
 	}
-
 	return nil, nil
 }

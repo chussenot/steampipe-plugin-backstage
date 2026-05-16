@@ -18,8 +18,7 @@ var ConfigSchema = map[string]*schema.Attribute{
 		Required: true,
 	},
 	"token": {
-		Type:     schema.TypeString,
-		Required: true,
+		Type: schema.TypeString,
 	},
 }
 

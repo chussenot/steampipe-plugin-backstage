@@ -24,8 +24,7 @@ docs:
 	go generate ./...
 
 config: ## Copy the backstage config to the steampipe config folder
-	rm -f $(HOME)/.steampipe/config/backstage.spc
-	cp .steampipe/config/backstage.spc $(HOME)/.steampipe/config/backstage.spc
+	cp config/backstage.spc $(HOME)/.steampipe/config/backstage.spc
 
 .DEFAULT_GOAL := help
 

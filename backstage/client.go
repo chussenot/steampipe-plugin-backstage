@@ -11,16 +11,17 @@ func getClient(host, token string) (*backstage.Client, error) {
 	if host == "" {
 		return nil, fmt.Errorf("host must be configured")
 	}
-	if token == "" {
-		return nil, fmt.Errorf("token must be configured")
+
+	var httpClient *http.Client
+	if token != "" {
+		httpClient = &http.Client{
+			Transport: &tokenRoundTripper{
+				token:  token,
+				client: http.DefaultTransport,
+			},
+		}
 	}
 
-	httpClient := &http.Client{
-		Transport: &tokenRoundTripper{
-			token:  token,
-			client: http.DefaultTransport,
-		},
-	}
 	client, err := backstage.NewClient(host, "", httpClient)
 	if err != nil {
 		return nil, fmt.Errorf("error creating backstage client: %v", err)

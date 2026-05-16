@@ -10,37 +10,35 @@ import (
 	gobackstage "github.com/datolabs-io/go-backstage/v3"
 )
 
-func TestGetClientRequiresHostAndToken(t *testing.T) {
+func TestGetClientRequiresHost(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name  string
-		host  string
-		token string
-	}{
-		{
-			name:  "missing host",
-			host:  "",
-			token: "dummy",
-		},
-		{
-			name:  "missing token",
-			host:  "http://localhost:7007",
-			token: "",
-		},
+	client, err := getClient("", "dummy")
+	if err == nil {
+		t.Fatalf("expected error for missing host, got nil")
 	}
+	if client != nil {
+		t.Fatalf("expected nil client on error")
+	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			client, err := getClient(tt.host, tt.token)
-			if err == nil {
-				t.Fatalf("expected error, got nil")
-			}
-			if client != nil {
-				t.Fatalf("expected nil client on error")
-			}
-		})
+func TestGetClientAllowsEmptyToken(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode([]gobackstage.Entity{}); err != nil {
+			t.Fatalf("failed to write response: %v", err)
+		}
+	}))
+	defer server.Close()
+
+	client, err := getClient(server.URL, "")
+	if err != nil {
+		t.Fatalf("expected no error for empty token, got: %v", err)
+	}
+	if client == nil {
+		t.Fatalf("expected non-nil client")
 	}
 }
 
