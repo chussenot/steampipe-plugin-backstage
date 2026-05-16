@@ -2,6 +2,22 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.2.0 - 2026-05-16
+#### Features
+- prepare plugin for hub release and automated publishing - (1962875) - copilot-swe-agent[bot], *chussenot*
+- prepare plugin for publication per release checklist - (530a36c) - copilot-swe-agent[bot], *chussenot*
+- implement TheTote client with Bearer auth and connection caching - (ceeafb5) - copilot-swe-agent[bot], *chussenot*
+#### Bug Fixes
+- (**ci**) update cocogitto config for v7 compatibility - (de42b66) - copilot-swe-agent[bot], *chussenot*
+- WIP - (b3aee46) - Clement HUSSENOT-DESENONGES
+- WIP - (a2e1032) - Clement HUSSENOT-DESENONGES
+- Remove the plugin before install it. - (981daab) - Clement HUSSENOT-DESENONGES
+#### Miscellaneous Chores
+- Add the apiVersion field - (ae27e9c) - Clement HUSSENOT-DESENONGES
+- Reorganize the fields - (0132077) - Clement HUSSENOT-DESENONGES
+
+- - -
+
 ## 0.1.1 - 2025-02-24
 #### Bug Fixes
 - Fix the plugin installation path - (b35cfba) - Clement HUSSENOT-DESENONGES
