@@ -24,8 +24,7 @@ func tableBackstageComponent() *plugin.Table {
 }
 
 func listComponents(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
-	config := GetConfig(d.Connection)
-	client, err := getClient(config)
+	client, err := connect(ctx, d)
 	if err != nil {
 		return nil, err
 	}

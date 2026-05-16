@@ -23,12 +23,7 @@ func tableBackstageGroup() *plugin.Table {
 }
 
 func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
-	config := GetConfig(d.Connection)
-	if config.Host == nil || config.Token == nil {
-		return nil, fmt.Errorf("host and token must be configured")
-	}
-
-	client, err := getClient(config)
+	client, err := connect(ctx, d)
 	if err != nil {
 		return nil, err
 	}

@@ -13,27 +13,27 @@ import (
 func TestGetClientRequiresHostAndToken(t *testing.T) {
 	t.Parallel()
 
-	host := "http://localhost:7007"
-	token := "dummy"
-
 	tests := []struct {
-		name   string
-		config BackstageConfig
+		name  string
+		host  string
+		token string
 	}{
 		{
-			name:   "missing host",
-			config: BackstageConfig{Token: &token},
+			name:  "missing host",
+			host:  "",
+			token: "dummy",
 		},
 		{
-			name:   "missing token",
-			config: BackstageConfig{Host: &host},
+			name:  "missing token",
+			host:  "http://localhost:7007",
+			token: "",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, err := getClient(tt.config)
+			client, err := getClient(tt.host, tt.token)
 			if err == nil {
 				t.Fatalf("expected error, got nil")
 			}
@@ -41,6 +41,37 @@ func TestGetClientRequiresHostAndToken(t *testing.T) {
 				t.Fatalf("expected nil client on error")
 			}
 		})
+	}
+}
+
+func TestGetClientSendsBearerToken(t *testing.T) {
+	t.Parallel()
+
+	const expectedToken = "my-secret-token"
+	var receivedAuth string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedAuth = r.Header.Get("Authorization")
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode([]gobackstage.Entity{}); err != nil {
+			t.Fatalf("failed to write response: %v", err)
+		}
+	}))
+	defer server.Close()
+
+	client, err := getClient(server.URL, expectedToken)
+	if err != nil {
+		t.Fatalf("getClient returned error: %v", err)
+	}
+
+	_, _, err = client.Catalog.Entities.List(context.Background(), &gobackstage.ListEntityOptions{})
+	if err != nil {
+		t.Fatalf("list entities returned error: %v", err)
+	}
+
+	expected := "Bearer " + expectedToken
+	if receivedAuth != expected {
+		t.Fatalf("expected Authorization header %q, got %q", expected, receivedAuth)
 	}
 }
 
@@ -75,12 +106,7 @@ func TestGetClientWithMockedCatalog(t *testing.T) {
 	}))
 	defer server.Close()
 
-	host := server.URL
-	token := "dummy-token"
-	client, err := getClient(BackstageConfig{
-		Host:  &host,
-		Token: &token,
-	})
+	client, err := getClient(server.URL, "dummy-token")
 	if err != nil {
 		t.Fatalf("getClient returned error: %v", err)
 	}

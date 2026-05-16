@@ -3,8 +3,6 @@ package backstage
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"os"
 
 	"github.com/datolabs-io/go-backstage/v3"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
@@ -14,36 +12,32 @@ import (
 func connect(ctx context.Context, d *plugin.QueryData) (*backstage.Client, error) {
 	logger := plugin.Logger(ctx)
 
-	// Get Backstage API Token
-	token := os.Getenv("BACKSTAGE_TOKEN")
-	backstageConfig := GetConfig(d.Connection)
-
-	logger.Debug("backstage.connect", "host", backstageConfig.Host)
-
-	if backstageConfig.Host == nil {
-		logger.Error("backstage.connect", "connection_error", "host configuration is missing")
-		return nil, fmt.Errorf("host configuration is missing")
+	cacheKey := "backstage"
+	if cached, ok := d.ConnectionManager.Cache.Get(cacheKey); ok {
+		if client, cOk := cached.(*backstage.Client); cOk {
+			return client, nil
+		}
 	}
 
-	if backstageConfig.Token != nil {
-		token = *backstageConfig.Token
-		logger.Debug("backstage.connect", "token_source", "config")
-	} else {
-		logger.Debug("backstage.connect", "token_source", "environment")
+	config := GetConfig(d.Connection)
+
+	var host, token string
+	if config.Host != nil {
+		host = *config.Host
+	}
+	if config.Token != nil {
+		token = *config.Token
 	}
 
-	if token == "" {
-		logger.Error("backstage.connect", "connection_error", "token is required but not provided")
-		return nil, fmt.Errorf("token is required but not provided")
-	}
+	logger.Debug("backstage.connect", "host", host)
 
-	httpClient := &http.Client{}
-	client, err := backstage.NewClient(*backstageConfig.Host, token, httpClient)
+	client, err := getClient(host, token)
 	if err != nil {
-		logger.Error("backstage.connect", "client_error", err)
-		return nil, err
+		logger.Error("backstage.connect", "connection_error", err)
+		return nil, fmt.Errorf("error creating backstage client: %v", err)
 	}
 
+	d.ConnectionManager.Cache.Set(cacheKey, client)
 	logger.Debug("backstage.connect", "status", "connection successful")
 	return client, nil
 }
