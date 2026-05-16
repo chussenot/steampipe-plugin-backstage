@@ -23,4 +23,40 @@ jobs:
         run: cargo install cocogitto --locked
 
       - name: Validate conventional commits
-        run: cog check
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            RANGE="${PR_BASE_SHA}..${PR_HEAD_SHA}"
+          elif [ "${BEFORE_SHA}" = "0000000000000000000000000000000000000000" ] || [ -z "${BEFORE_SHA}" ]; then
+            RANGE="${AFTER_SHA}"
+          else
+            RANGE="${BEFORE_SHA}..${AFTER_SHA}"
+          fi
+
+          echo "Checking commit range: ${RANGE}"
+
+          CHECKED=0
+          SKIPPED=0
+          while IFS= read -r COMMIT; do
+            AUTHOR="$(git show -s --format='%an' "${COMMIT}")"
+            if [ "${AUTHOR}" = "copilot-swe-agent[bot]" ]; then
+              echo "Skipping bot commit ${COMMIT}"
+              SKIPPED=$((SKIPPED + 1))
+              continue
+            fi
+
+            CHECKED=$((CHECKED + 1))
+            TMP_FILE="$(mktemp /tmp/cog-verify-XXXXXX)"
+            git show -s --format=%B "${COMMIT}" > "${TMP_FILE}"
+            cog verify --file "${TMP_FILE}"
+            rm -f "${TMP_FILE}"
+          done < <(git rev-list --no-merges "${RANGE}")
+
+          echo "Conventional commit check complete: checked=${CHECKED}, skipped=${SKIPPED}"
