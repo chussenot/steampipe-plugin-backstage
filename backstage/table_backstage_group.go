@@ -28,14 +28,6 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 		return nil, err
 	}
 
-	// Get the limit
-	limit := d.QueryContext.Limit
-	if limit != nil {
-		if *limit < 1 {
-			return nil, nil
-		}
-	}
-
 	opts := &backstage.ListEntityOptions{
 		Filters: []string{"kind=Group"},
 		Fields:  []string{},

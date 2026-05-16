@@ -56,7 +56,6 @@ func listEntities(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDat
 		}
 		logger.Debug("listEntities", "pagination_cursor", cursor)
 	}
-
 	logger.Info("listEntities", "final_count", entityCount)
 	return nil, nil
 }

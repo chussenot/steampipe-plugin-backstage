@@ -2,6 +2,7 @@ package backstage
 
 import (
 	"context"
+	"strings"
 
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
@@ -42,7 +43,5 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 
 // isNotFoundError returns true if the error is a not found error
 func isNotFoundError(err error) bool {
-	// Implement specific error handling for Backstage API
-	// Example: return err.Error() contains "404") || err.Error() contains "not found")
-	return false
+	return err != nil && (strings.Contains(err.Error(), "404") || strings.Contains(err.Error(), "not found"))
 }
