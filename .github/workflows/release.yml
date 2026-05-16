@@ -5,11 +5,17 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     name: Build and publish
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - uses: francois2metz/steampipe-plugin-build-push-action@v0
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

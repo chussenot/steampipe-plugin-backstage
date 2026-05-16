@@ -14,8 +14,7 @@ type BackstageConfig struct {
 
 var ConfigSchema = map[string]*schema.Attribute{
 	"host": {
-		Type:     schema.TypeString,
-		Required: true,
+		Type: schema.TypeString,
 	},
 	"token": {
 		Type: schema.TypeString,
@@ -30,7 +29,15 @@ func GetConfig(connection *plugin.Connection) BackstageConfig {
 	if connection == nil || connection.Config == nil {
 		return BackstageConfig{}
 	}
-	config, _ := connection.Config.(BackstageConfig)
+	config := BackstageConfig{}
+	switch c := connection.Config.(type) {
+	case BackstageConfig:
+		config = c
+	case *BackstageConfig:
+		if c != nil {
+			config = *c
+		}
+	}
 
 	// Environment variables override connection config
 	if host := os.Getenv("BACKSTAGE_HOST"); host != "" {
