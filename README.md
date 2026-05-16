@@ -1,111 +1,117 @@
 # Backstage Plugin for Steampipe
 
-Use SQL to query namespaces, components, APIs, users, groups and more from [Backstage](https://backstage.io/).
+Use SQL to query the Backstage software catalog (entities, components, APIs, systems, resources, users, groups, templates, locations, and domains).
 
-- **[Get started →](docs/index.md)**
-- Documentation: [Table definitions & examples](docs/tables.md)
-- Community: [Join #steampipe on Slack →](https://turbot.com/community/join)
-- Get involved: [Issues](https://github.com/chussenot/steampipe-plugin-backstage/issues)
+- Getting started: [docs/index.md](docs/index.md)
+- Table reference: [docs/tables.md](docs/tables.md)
+- Issues: [github.com/chussenot/steampipe-plugin-backstage/issues](https://github.com/chussenot/steampipe-plugin-backstage/issues)
 
-## Quick start
+## What this plugin does
 
-Install the plugin with [Steampipe](https://steampipe.io/downloads):
+This plugin connects to a Backstage instance and exposes catalog data as relational tables:
 
-```shell
+- `backstage_catalog_entity` (all entities)
+- `backstage_catalog_component`, `backstage_catalog_api`, `backstage_catalog_resource`
+- `backstage_catalog_system`, `backstage_catalog_domain`
+- `backstage_catalog_user`, `backstage_catalog_group`
+- `backstage_catalog_template`, `backstage_catalog_location`
+
+## Install
+
+```sh
 steampipe plugin install chussenot/backstage
 ```
 
-[Configure the plugin](docs/index.md#configuration) by editing `~/.steampipe/config/backstage.spc`:
+## Configure
+
+Create `~/.steampipe/config/backstage.spc`:
 
 ```hcl
 connection "backstage" {
   plugin = "chussenot/backstage"
-
-  # Backstage instance URL (required).
-  # Can also be set with the BACKSTAGE_HOST environment variable.
-  host = "https://demo.backstage.io"
-
-  # Backstage API token for authentication (optional).
-  # Required for Backstage instances with authentication enabled.
-  # Can also be set with the BACKSTAGE_TOKEN environment variable.
+  host   = "https://demo.backstage.io"
   # token = "your-token-here"
 }
 ```
 
-Or set environment variables:
+You can also configure through environment variables:
 
-```shell
+```sh
 export BACKSTAGE_HOST="https://demo.backstage.io"
 export BACKSTAGE_TOKEN="your-token-here"
 ```
 
-Start Steampipe:
+`host` is required either in connection config or `BACKSTAGE_HOST`. `token` is optional for public/anonymous Backstage catalogs.
 
-```shell
-steampipe query
-```
+## Example queries
 
-Run a query:
+List entities by kind:
 
 ```sql
-select
-  kind,
-  metadata ->> 'name' as name,
-  metadata ->> 'namespace' as namespace,
-  metadata ->> 'description' as description
-from
-  backstage_catalog_entity
-where
-  kind = 'Component';
+select kind, count(*) as total
+from backstage_catalog_entity
+group by kind
+order by total desc;
 ```
 
-## Developing
+List components and owners:
+
+```sql
+select name, owner, system
+from backstage_catalog_component
+order by name;
+```
+
+List APIs and their lifecycle:
+
+```sql
+select name, type, lifecycle, owner
+from backstage_catalog_api
+order by name;
+```
+
+## Development workflow
 
 Prerequisites:
 
-- [Steampipe](https://steampipe.io/downloads)
-- [Golang](https://golang.org/doc/install)
+- Go 1.26+
+- Steampipe CLI
 
-Clone:
+Local development:
 
 ```sh
 git clone https://github.com/chussenot/steampipe-plugin-backstage.git
 cd steampipe-plugin-backstage
-```
-
-Build, which automatically installs the new version to your `~/.steampipe/plugins` directory:
-
-```sh
+make test
+go vet ./...
+make build
 make install
+cp config/backstage.spc ~/.steampipe/config/backstage.spc
 ```
 
-Configure the plugin:
+Then run:
 
 ```sh
-cp config/* ~/.steampipe/config
-vi ~/.steampipe/config/backstage.spc
-```
-
-Try it!
-
-```shell
 steampipe query
-> .inspect backstage
 ```
 
-Further reading:
+## Release workflow (Cog + GitHub Actions)
 
-- [Writing plugins](https://steampipe.io/docs/develop/writing-plugins)
-- [Writing your first table](https://steampipe.io/docs/develop/writing-your-first-table)
+1. Merge conventional commits into `master`.
+2. The master release-bump workflow runs `cog bump --auto`.
+3. Cog creates version commit + tag (`v*`) and pushes them.
+4. Tag workflows build/push the plugin image and verify with a Steampipe smoke query.
+5. Validate install:
 
-## Resources
+```sh
+steampipe plugin install chussenot/backstage
+steampipe query "select count(*) from backstage_catalog_entity;"
+```
 
-- [steampipe](https://steampipe.io)
-- [backstage](https://backstage.io/)
-- [plugin release checklist](https://steampipe.io/docs/develop/plugin-release-checklist)
-- [go-backstage](https://github.com/datolabs-io/go-backstage)
-- [steampipe plugin standards](https://steampipe.io/docs/develop/standards#naming)
+## Steampipe Hub publication note
+
+Automated build/push and release tagging are handled in this repository. If an additional Steampipe Hub submission/review step is required for indexing, perform that manual submission after the GitHub release/tag is created.
 
 ## License
 
-Apache 2.0 — see [LICENSE](LICENSE).
+Apache-2.0. See [LICENSE](LICENSE).

@@ -19,6 +19,7 @@ A User in Backstage represents an individual person in the organization. Users c
 | tags | json | A list of tags attached to the user. |
 | links | json | A list of external hyperlinks related to the user. |
 | email | string | Email address of the user. |
+| picture | string | Picture URL of the user. |
 | member_of | json | Groups the user belongs to. |
 
 ## Examples
@@ -36,12 +37,12 @@ from
 ### List users and their groups
 ```sql
 select
-  u.name as user_name,
-  g.name as group_name
+  name as user_name,
+  member_of
 from
-  backstage_catalog_user as u,
-  jsonb_array_elements_text(u.member_of) as group_ref
-  join backstage_catalog_group as g on g.name = group_ref;
+  backstage_catalog_user
+where
+  member_of is not null;
 ```
 
 ### Find users with specific roles

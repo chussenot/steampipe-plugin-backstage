@@ -1,0 +1,26 @@
+name: Conventional Commits
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  cog-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Cocogitto
+        run: cargo install cocogitto --locked
+
+      - name: Validate conventional commits
+        run: cog check

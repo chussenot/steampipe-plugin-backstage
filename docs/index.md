@@ -58,6 +58,10 @@ limit 5;
 
 If you get results, you're all set! If you get an error, check your configuration.
 
+### Available Tables
+
+See [Table Reference](tables.md).
+
 ## Get involved
 
 * Open source: [GitHub Repository](https://github.com/chussenot/steampipe-plugin-backstage)
@@ -111,3 +115,23 @@ For more details about Backstage permissions, see:
 
 For more help, join our [Slack community](https://turbot.com/community/join).
 
+## Development
+
+```sh
+make test
+go vet ./...
+make build
+```
+
+Install local plugin:
+
+```sh
+make install
+```
+
+## Release and publication
+
+- Conventional commits are enforced in CI.
+- Version/tag bump is automated from `master` via Cocogitto.
+- Tag pushes (`v*`) trigger plugin build/push and published-plugin verification workflows.
+- If the Steampipe Hub requires an additional submission/review action, complete that manual step after the GitHub tag/release is published.

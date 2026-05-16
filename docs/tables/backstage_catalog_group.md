@@ -39,13 +39,10 @@ from
 
 ```sql
 select
-  g.name as group_name,
-  count(u.name) as member_count
+  name as group_name,
+  jsonb_array_length(coalesce(members, '[]'::jsonb)) as member_count
 from
-  backstage_catalog_group as g
-  left join backstage_catalog_user as u on u.spec->>'memberOf' = g.name
-group by
-  g.name
+  backstage_catalog_group
 order by
   member_count desc;
 ```
