@@ -1,5 +1,5 @@
 from_latest_tag = false
-ignore_merge_commits = false
+ignore_merge_commits = true
 disable_changelog = false
 generate_mono_repository_global_tag = true
 branch_whitelist = ["master"]
@@ -19,5 +19,3 @@ path = "CHANGELOG.md"
 authors = []
 
 [bump_profiles]
-
-[packages]
