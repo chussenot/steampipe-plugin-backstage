@@ -19,8 +19,8 @@ jobs:
 
       - name: Build local plugin
         run: |
-          mkdir -p ~/.steampipe/plugins/local/backstage
-          go build -o ~/.steampipe/plugins/local/backstage/backstage.plugin *.go
+          mkdir -p /tmp/backstage-plugin
+          go build -o /tmp/backstage-plugin/backstage.plugin *.go
 
       - name: Start mock Backstage catalog
         run: |
@@ -75,6 +75,11 @@ jobs:
               host   = "http://127.0.0.1:7007"
               token  = "dummy-token"
             }
+
+      - name: Install local plugin
+        run: |
+          mkdir -p ~/.steampipe/plugins/local/backstage
+          cp /tmp/backstage-plugin/backstage.plugin ~/.steampipe/plugins/local/backstage/backstage.plugin
 
       - name: Steampipe smoke query
         run: |
