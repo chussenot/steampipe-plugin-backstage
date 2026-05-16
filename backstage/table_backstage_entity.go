@@ -51,7 +51,6 @@ func listEntities(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDat
 
 		for _, entity := range entities {
 			entityCount++
-			// mappedEntity := mapEntityFields(entity, opts.Fields)
 			d.StreamListItem(ctx, entity)
 		}
 
@@ -66,16 +65,4 @@ func listEntities(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateDat
 
 	logger.Info("listEntities", "final_count", entityCount)
 	return nil, nil
-}
-
-// mapEntityFields maps the raw entity fields to a structured format
-func mapEntityFields(entity backstage.Entity, fields []string) map[string]interface{} {
-	logger := plugin.Logger(context.Background())
-	logger.Debug("mapEntityFields", "entity_name", entity.Metadata.Name, "requested_fields", fields)
-
-	mapped := map[string]interface{}{
-		"name": entity.Metadata.Name,
-	}
-
-	return mapped
 }
