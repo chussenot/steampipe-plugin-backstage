@@ -18,7 +18,9 @@ A Backstage System represents a collection of resources and components that work
 | annotations | json | Annotations attached to the system. |
 | tags | json | A list of tags attached to the system. |
 | links | json | A list of external hyperlinks related to the system. |
+| owner | string | Owner of the system. |
 | domain | string | Domain the system belongs to. |
+| type | string | Type of the system. |
 
 ## Examples
 
@@ -59,4 +61,3 @@ from
 where
   domain is null;
 ``` 
-

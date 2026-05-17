@@ -18,6 +18,7 @@ A User in Backstage represents an individual person in the organization. Users c
 | annotations | json | Annotations attached to the user. |
 | tags | json | A list of tags attached to the user. |
 | links | json | A list of external hyperlinks related to the user. |
+| display_name | string | Display name of the user profile. |
 | email | string | Email address of the user. |
 | picture | string | Picture URL of the user. |
 | member_of | json | Groups the user belongs to. |

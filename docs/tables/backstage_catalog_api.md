@@ -19,6 +19,7 @@ A Backstage API entity represents an interface that can be exposed by a componen
 | tags | json | A list of tags attached to the API. |
 | links | json | A list of external hyperlinks related to the API. |
 | owner | string | Owner of the API. |
+| system | string | System the API belongs to. |
 | definition | json | API definition. |
 | type | string | Type of the API. |
 | lifecycle | string | Lifecycle state of the API. |

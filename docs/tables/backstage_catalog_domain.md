@@ -19,6 +19,8 @@ A Domain represents the highest level of organization in your software ecosystem
 | tags | json | A list of tags attached to the domain. |
 | links | json | A list of external hyperlinks related to the domain. |
 | owner | string | Owner of the domain. |
+| subdomain_of | string | Parent domain this domain is part of. |
+| type | string | Type of the domain. |
 
 ## Examples
 

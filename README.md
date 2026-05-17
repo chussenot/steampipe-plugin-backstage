@@ -11,6 +11,7 @@ Use SQL to query the Backstage software catalog (entities, components, APIs, sys
 This plugin connects to a Backstage instance and exposes catalog data as relational tables:
 
 - `backstage_catalog_entity` (all entities)
+- `backstage_catalog_entity_kind` (discovered apiVersion/kind pairs)
 - `backstage_catalog_component`, `backstage_catalog_api`, `backstage_catalog_resource`
 - `backstage_catalog_system`, `backstage_catalog_domain`
 - `backstage_catalog_user`, `backstage_catalog_group`

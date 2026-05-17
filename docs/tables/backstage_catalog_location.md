@@ -20,6 +20,8 @@ A Location in Backstage represents a source from which entity definitions are in
 | links | json | A list of external hyperlinks related to the location. |
 | type | string | Type of the location (url, file, etc.). |
 | target | string | Target of the location (URL or file path). |
+| targets | json | Targets of the location. |
+| presence | string | Whether the target is required or optional. |
 
 ## Examples
 

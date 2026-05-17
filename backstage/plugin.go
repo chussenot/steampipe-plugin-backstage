@@ -21,13 +21,13 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 		},
 		TableMap: map[string]*plugin.Table{
 			// Catalog entities
-			"backstage_catalog_entity":    tableBackstageEntity(),
+			"backstage_catalog_entity":      tableBackstageEntity(),
 			"backstage_catalog_entity_kind": tableBackstageEntityKind(),
-			"backstage_catalog_system":    tableBackstageSystem(),
-			"backstage_catalog_domain":    tableBackstageDomain(),
-			"backstage_catalog_component": tableBackstageComponent(),
-			"backstage_catalog_api":       tableBackstageAPI(),
-			"backstage_catalog_resource":  tableBackstageResource(),
+			"backstage_catalog_system":      tableBackstageSystem(),
+			"backstage_catalog_domain":      tableBackstageDomain(),
+			"backstage_catalog_component":   tableBackstageComponent(),
+			"backstage_catalog_api":         tableBackstageAPI(),
+			"backstage_catalog_resource":    tableBackstageResource(),
 
 			// Organizational entities
 			"backstage_catalog_group": tableBackstageGroup(),
