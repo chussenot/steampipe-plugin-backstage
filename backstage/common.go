@@ -3,6 +3,7 @@ package backstage
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/datolabs-io/go-backstage/v3"
@@ -12,21 +13,35 @@ import (
 )
 
 var commonColumns = []*plugin.Column{
+	{Name: "api_version", Type: proto.ColumnType_STRING, Description: "The API version of the entity schema.", Transform: transform.FromField("ApiVersion")},
 	{Name: "name", Type: proto.ColumnType_STRING, Description: "The name of the entity.", Transform: transform.FromField("Metadata.Name")},
 	{Name: "namespace", Type: proto.ColumnType_STRING, Description: "The namespace the entity belongs to.", Transform: transform.FromField("Metadata.Namespace")},
 	{Name: "kind", Type: proto.ColumnType_STRING, Description: "The kind of the entity."},
 	{Name: "metadata", Type: proto.ColumnType_JSON, Description: "The full metadata of the entity."},
 	{Name: "spec", Type: proto.ColumnType_JSON, Description: "The specification data of the entity."},
 	{Name: "relations", Type: proto.ColumnType_JSON, Description: "The relations of the entity to other entities."},
+	{Name: "status", Type: proto.ColumnType_JSON, Description: "Entity processing and health status.", Transform: transform.FromField("Status")},
+	{Name: "status_items", Type: proto.ColumnType_JSON, Description: "Status items extracted from status.items.", Transform: transform.FromField("Status.Items")},
 	{Name: "title", Type: proto.ColumnType_STRING, Description: "A display name of the entity.", Transform: transform.FromField("Metadata.Title")},
 	{Name: "description", Type: proto.ColumnType_STRING, Description: "A description of the entity.", Transform: transform.FromField("Metadata.Description")},
 	{Name: "labels", Type: proto.ColumnType_JSON, Description: "Labels attached to the entity.", Transform: transform.FromField("Metadata.Labels")},
 	{Name: "annotations", Type: proto.ColumnType_JSON, Description: "Annotations attached to the entity.", Transform: transform.FromField("Metadata.Annotations")},
+	{Name: "labels_kv", Type: proto.ColumnType_JSON, Description: "Flattened labels as key/value objects.", Transform: transform.FromField("Metadata.Labels").Transform(transform.From(mapToKeyValueListTransform))},
+	{Name: "annotations_kv", Type: proto.ColumnType_JSON, Description: "Flattened annotations as key/value objects.", Transform: transform.FromField("Metadata.Annotations").Transform(transform.From(mapToKeyValueListTransform))},
+	{Name: "annotation_github_project_slug", Type: proto.ColumnType_STRING, Description: "Value of metadata.annotations['github.com/project-slug'].", Transform: transform.FromField("Metadata.Annotations").Transform(transform.FromP(mapValueTransform, "github.com/project-slug"))},
+	{Name: "annotation_techdocs_ref", Type: proto.ColumnType_STRING, Description: "Value of metadata.annotations['backstage.io/techdocs-ref'].", Transform: transform.FromField("Metadata.Annotations").Transform(transform.FromP(mapValueTransform, "backstage.io/techdocs-ref"))},
+	{Name: "annotation_source_location", Type: proto.ColumnType_STRING, Description: "Value of metadata.annotations['backstage.io/source-location'].", Transform: transform.FromField("Metadata.Annotations").Transform(transform.FromP(mapValueTransform, "backstage.io/source-location"))},
+	{Name: "annotation_managed_by_location", Type: proto.ColumnType_STRING, Description: "Value of metadata.annotations['backstage.io/managed-by-location'].", Transform: transform.FromField("Metadata.Annotations").Transform(transform.FromP(mapValueTransform, "backstage.io/managed-by-location"))},
 	{Name: "tags", Type: proto.ColumnType_JSON, Description: "A list of tags attached to the entity.", Transform: transform.FromField("Metadata.Tags")},
 	{Name: "links", Type: proto.ColumnType_JSON, Description: "A list of external hyperlinks related to the entity.", Transform: transform.FromField("Metadata.Links")},
+	{Name: "relation_owned_by", Type: proto.ColumnType_JSON, Description: "Target refs from ownedBy relations.", Transform: transform.FromField("Relations").Transform(transform.FromP(relationTargetsByTypeTransform, "ownedBy"))},
+	{Name: "relation_part_of", Type: proto.ColumnType_JSON, Description: "Target refs from partOf relations.", Transform: transform.FromField("Relations").Transform(transform.FromP(relationTargetsByTypeTransform, "partOf"))},
+	{Name: "relation_depends_on", Type: proto.ColumnType_JSON, Description: "Target refs from dependsOn relations.", Transform: transform.FromField("Relations").Transform(transform.FromP(relationTargetsByTypeTransform, "dependsOn"))},
+	{Name: "relation_has_part", Type: proto.ColumnType_JSON, Description: "Target refs from hasPart relations.", Transform: transform.FromField("Relations").Transform(transform.FromP(relationTargetsByTypeTransform, "hasPart"))},
 }
 
 var commonKeyColumns = plugin.KeyColumnSlice{
+	{Name: "api_version", Require: plugin.Optional},
 	{Name: "name", Require: plugin.Optional},
 	{Name: "namespace", Require: plugin.Optional},
 	{Name: "kind", Require: plugin.Optional},
@@ -34,6 +49,68 @@ var commonKeyColumns = plugin.KeyColumnSlice{
 
 func specFieldTransform(field string) *transform.ColumnTransforms {
 	return transform.FromField(fmt.Sprintf("Spec.%s", field))
+}
+
+func mapValueTransform(_ context.Context, d *transform.TransformData) (interface{}, error) {
+	annotationKey, ok := d.Param.(string)
+	if !ok || annotationKey == "" {
+		return nil, nil
+	}
+
+	values, ok := d.Value.(map[string]string)
+	if !ok || len(values) == 0 {
+		return nil, nil
+	}
+
+	return values[annotationKey], nil
+}
+
+func mapToKeyValueListTransform(_ context.Context, d *transform.TransformData) (interface{}, error) {
+	values, ok := d.Value.(map[string]string)
+	if !ok || len(values) == 0 {
+		return nil, nil
+	}
+
+	keys := make([]string, 0, len(values))
+	for k := range values {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	flattened := make([]map[string]string, 0, len(values))
+	for _, key := range keys {
+		flattened = append(flattened, map[string]string{
+			"key":   key,
+			"value": values[key],
+		})
+	}
+
+	return flattened, nil
+}
+
+func relationTargetsByTypeTransform(_ context.Context, d *transform.TransformData) (interface{}, error) {
+	relationType, ok := d.Param.(string)
+	if !ok || relationType == "" {
+		return nil, nil
+	}
+
+	relations, ok := d.Value.([]backstage.EntityRelation)
+	if !ok || len(relations) == 0 {
+		return nil, nil
+	}
+
+	targetRefs := make([]string, 0)
+	for _, relation := range relations {
+		if relation.Type == relationType && relation.TargetRef != "" {
+			targetRefs = append(targetRefs, relation.TargetRef)
+		}
+	}
+
+	if len(targetRefs) == 0 {
+		return nil, nil
+	}
+
+	return targetRefs, nil
 }
 
 func newCatalogEntityTable(name, description, kind string, extraColumns []*plugin.Column, extraKeyColumns plugin.KeyColumnSlice) *plugin.Table {
@@ -87,13 +164,17 @@ func buildCatalogFilters(d *plugin.QueryData, tableKind string) []string {
 	}
 
 	for qual, filterKey := range map[string]string{
-		"name":      "metadata.name",
-		"namespace": "metadata.namespace",
-		"owner":     "spec.owner",
-		"system":    "spec.system",
-		"domain":    "spec.domain",
-		"type":      "spec.type",
-		"lifecycle": "spec.lifecycle",
+		"api_version":     "apiVersion",
+		"name":            "metadata.name",
+		"namespace":       "metadata.namespace",
+		"owner":           "spec.owner",
+		"system":          "spec.system",
+		"domain":          "spec.domain",
+		"type":            "spec.type",
+		"lifecycle":       "spec.lifecycle",
+		"subcomponent_of": "spec.subcomponentOf",
+		"subdomain_of":    "spec.subdomainOf",
+		"presence":        "spec.presence",
 	} {
 		if value := strings.TrimSpace(d.EqualsQualString(qual)); value != "" {
 			filters[filterKey] = value
@@ -105,7 +186,7 @@ func buildCatalogFilters(d *plugin.QueryData, tableKind string) []string {
 	}
 
 	var filterParts []string
-	for _, key := range []string{"kind", "metadata.name", "metadata.namespace", "spec.owner", "spec.system", "spec.domain", "spec.type", "spec.lifecycle"} {
+	for _, key := range []string{"apiVersion", "kind", "metadata.name", "metadata.namespace", "spec.owner", "spec.system", "spec.domain", "spec.type", "spec.lifecycle", "spec.subcomponentOf", "spec.subdomainOf", "spec.presence"} {
 		if value, ok := filters[key]; ok && value != "" {
 			filterParts = append(filterParts, fmt.Sprintf("%s=%s", key, value))
 		}
