@@ -14,6 +14,8 @@ func tableBackstageResource() *plugin.Table {
 			{Name: "type", Type: proto.ColumnType_STRING, Description: "Type of the resource.", Transform: specFieldTransform("type")},
 			{Name: "owner", Type: proto.ColumnType_STRING, Description: "Owner of the resource.", Transform: specFieldTransform("owner")},
 			{Name: "system", Type: proto.ColumnType_STRING, Description: "System the resource belongs to.", Transform: specFieldTransform("system")},
+			{Name: "depends_on", Type: proto.ColumnType_JSON, Description: "Entities this resource depends on.", Transform: specFieldTransform("dependsOn")},
+			{Name: "dependency_of", Type: proto.ColumnType_JSON, Description: "Entities that depend on this resource.", Transform: specFieldTransform("dependencyOf")},
 		},
 		plugin.KeyColumnSlice{
 			{Name: "type", Require: plugin.Optional},

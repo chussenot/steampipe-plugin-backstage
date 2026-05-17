@@ -15,6 +15,9 @@ func tableBackstageGroup() *plugin.Table {
 			{Name: "parent", Type: proto.ColumnType_STRING, Description: "Parent group of this group.", Transform: specFieldTransform("parent")},
 			{Name: "children", Type: proto.ColumnType_JSON, Description: "Child groups of this group.", Transform: specFieldTransform("children")},
 			{Name: "members", Type: proto.ColumnType_JSON, Description: "Members belonging to this group.", Transform: specFieldTransform("members")},
+			{Name: "display_name", Type: proto.ColumnType_STRING, Description: "Display name of the group profile.", Transform: specFieldTransform("profile.displayName")},
+			{Name: "email", Type: proto.ColumnType_STRING, Description: "Email address from the group profile.", Transform: specFieldTransform("profile.email")},
+			{Name: "picture", Type: proto.ColumnType_STRING, Description: "Picture URL from the group profile.", Transform: specFieldTransform("profile.picture")},
 		},
 		plugin.KeyColumnSlice{
 			{Name: "type", Require: plugin.Optional},
