@@ -68,18 +68,22 @@ jobs:
 
       - name: Setup Steampipe
         uses: francois2metz/setup-steampipe@v1
-        with:
-          plugin-connections: |
-            connection "backstage" {
-              plugin = "local/backstage"
-              host   = "http://127.0.0.1:7007"
-              token  = "dummy-token"
-            }
 
       - name: Install local plugin
         run: |
           mkdir -p ~/.steampipe/plugins/local/backstage
           cp /tmp/backstage-plugin/backstage.plugin ~/.steampipe/plugins/local/backstage/backstage.plugin
+
+      - name: Configure Steampipe connection
+        run: |
+          mkdir -p ~/.steampipe/config
+          cat <<'EOF' > ~/.steampipe/config/backstage.spc
+          connection "backstage" {
+            plugin = "local/backstage"
+            host   = "http://127.0.0.1:7007"
+            token  = "dummy-token"
+          }
+          EOF
 
       - name: Steampipe smoke query
         run: |
