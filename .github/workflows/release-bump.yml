@@ -30,5 +30,8 @@ jobs:
       - name: Bump version and create tag
         run: cog bump --auto
 
-      - name: Push version commit and tags
-        run: git push --follow-tags
+      - name: Push version commit
+        run: git push
+
+      - name: Push tags
+        run: git push --tags
