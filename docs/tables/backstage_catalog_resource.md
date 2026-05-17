@@ -21,6 +21,8 @@ A Resource in Backstage represents infrastructure or services that are used by c
 | type | string | Type of the resource. |
 | owner | string | Owner of the resource. |
 | system | string | System the resource belongs to. |
+| depends_on | json | Entities this resource depends on. |
+| dependency_of | json | Entities that depend on this resource. |
 
 ## Examples
 

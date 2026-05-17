@@ -21,6 +21,9 @@ A Group in Backstage represents an organizational team or unit. Groups can own c
 | parent | string | Parent group of this group. |
 | children | json | Child groups of this group. |
 | members | json | Members belonging to this group. |
+| display_name | string | Display name of the group profile. |
+| email | string | Email address from the group profile. |
+| picture | string | Picture URL from the group profile. |
 
 ## Examples
 

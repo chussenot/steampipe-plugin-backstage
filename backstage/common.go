@@ -26,18 +26,18 @@ var commonColumns = []*plugin.Column{
 	{Name: "description", Type: proto.ColumnType_STRING, Description: "A description of the entity.", Transform: transform.FromField("Metadata.Description")},
 	{Name: "labels", Type: proto.ColumnType_JSON, Description: "Labels attached to the entity.", Transform: transform.FromField("Metadata.Labels")},
 	{Name: "annotations", Type: proto.ColumnType_JSON, Description: "Annotations attached to the entity.", Transform: transform.FromField("Metadata.Annotations")},
-	{Name: "labels_kv", Type: proto.ColumnType_JSON, Description: "Flattened labels as key/value objects.", Transform: transform.FromField("Metadata.Labels").Transform(transform.From(mapToKeyValueListTransform))},
-	{Name: "annotations_kv", Type: proto.ColumnType_JSON, Description: "Flattened annotations as key/value objects.", Transform: transform.FromField("Metadata.Annotations").Transform(transform.From(mapToKeyValueListTransform))},
-	{Name: "annotation_github_project_slug", Type: proto.ColumnType_STRING, Description: "Value of metadata.annotations['github.com/project-slug'].", Transform: transform.FromField("Metadata.Annotations").Transform(transform.FromP(mapValueTransform, "github.com/project-slug"))},
-	{Name: "annotation_techdocs_ref", Type: proto.ColumnType_STRING, Description: "Value of metadata.annotations['backstage.io/techdocs-ref'].", Transform: transform.FromField("Metadata.Annotations").Transform(transform.FromP(mapValueTransform, "backstage.io/techdocs-ref"))},
-	{Name: "annotation_source_location", Type: proto.ColumnType_STRING, Description: "Value of metadata.annotations['backstage.io/source-location'].", Transform: transform.FromField("Metadata.Annotations").Transform(transform.FromP(mapValueTransform, "backstage.io/source-location"))},
-	{Name: "annotation_managed_by_location", Type: proto.ColumnType_STRING, Description: "Value of metadata.annotations['backstage.io/managed-by-location'].", Transform: transform.FromField("Metadata.Annotations").Transform(transform.FromP(mapValueTransform, "backstage.io/managed-by-location"))},
+	{Name: "labels_kv", Type: proto.ColumnType_JSON, Description: "Flattened labels as key/value objects.", Transform: transform.FromP(entityMapToKeyValueListTransform, "labels")},
+	{Name: "annotations_kv", Type: proto.ColumnType_JSON, Description: "Flattened annotations as key/value objects.", Transform: transform.FromP(entityMapToKeyValueListTransform, "annotations")},
+	{Name: "annotation_github_project_slug", Type: proto.ColumnType_STRING, Description: "Value of metadata.annotations['github.com/project-slug'].", Transform: transform.FromP(entityAnnotationValueTransform, "github.com/project-slug")},
+	{Name: "annotation_techdocs_ref", Type: proto.ColumnType_STRING, Description: "Value of metadata.annotations['backstage.io/techdocs-ref'].", Transform: transform.FromP(entityAnnotationValueTransform, "backstage.io/techdocs-ref")},
+	{Name: "annotation_source_location", Type: proto.ColumnType_STRING, Description: "Value of metadata.annotations['backstage.io/source-location'].", Transform: transform.FromP(entityAnnotationValueTransform, "backstage.io/source-location")},
+	{Name: "annotation_managed_by_location", Type: proto.ColumnType_STRING, Description: "Value of metadata.annotations['backstage.io/managed-by-location'].", Transform: transform.FromP(entityAnnotationValueTransform, "backstage.io/managed-by-location")},
 	{Name: "tags", Type: proto.ColumnType_JSON, Description: "A list of tags attached to the entity.", Transform: transform.FromField("Metadata.Tags")},
 	{Name: "links", Type: proto.ColumnType_JSON, Description: "A list of external hyperlinks related to the entity.", Transform: transform.FromField("Metadata.Links")},
-	{Name: "relation_owned_by", Type: proto.ColumnType_JSON, Description: "Target refs from ownedBy relations.", Transform: transform.FromField("Relations").Transform(transform.FromP(relationTargetsByTypeTransform, "ownedBy"))},
-	{Name: "relation_part_of", Type: proto.ColumnType_JSON, Description: "Target refs from partOf relations.", Transform: transform.FromField("Relations").Transform(transform.FromP(relationTargetsByTypeTransform, "partOf"))},
-	{Name: "relation_depends_on", Type: proto.ColumnType_JSON, Description: "Target refs from dependsOn relations.", Transform: transform.FromField("Relations").Transform(transform.FromP(relationTargetsByTypeTransform, "dependsOn"))},
-	{Name: "relation_has_part", Type: proto.ColumnType_JSON, Description: "Target refs from hasPart relations.", Transform: transform.FromField("Relations").Transform(transform.FromP(relationTargetsByTypeTransform, "hasPart"))},
+	{Name: "relation_owned_by", Type: proto.ColumnType_JSON, Description: "Target refs from ownedBy relations.", Transform: transform.FromP(relationTargetsByTypeTransform, "ownedBy")},
+	{Name: "relation_part_of", Type: proto.ColumnType_JSON, Description: "Target refs from partOf relations.", Transform: transform.FromP(relationTargetsByTypeTransform, "partOf")},
+	{Name: "relation_depends_on", Type: proto.ColumnType_JSON, Description: "Target refs from dependsOn relations.", Transform: transform.FromP(relationTargetsByTypeTransform, "dependsOn")},
+	{Name: "relation_has_part", Type: proto.ColumnType_JSON, Description: "Target refs from hasPart relations.", Transform: transform.FromP(relationTargetsByTypeTransform, "hasPart")},
 }
 
 var commonKeyColumns = plugin.KeyColumnSlice{
@@ -51,23 +51,46 @@ func specFieldTransform(field string) *transform.ColumnTransforms {
 	return transform.FromField(fmt.Sprintf("Spec.%s", field))
 }
 
-func mapValueTransform(_ context.Context, d *transform.TransformData) (interface{}, error) {
+func entityAnnotationValueTransform(_ context.Context, d *transform.TransformData) (interface{}, error) {
 	annotationKey, ok := d.Param.(string)
 	if !ok || annotationKey == "" {
 		return nil, nil
 	}
 
-	values, ok := d.Value.(map[string]string)
-	if !ok || len(values) == 0 {
+	entity, ok := d.Value.(backstage.Entity)
+	if !ok || len(entity.Metadata.Annotations) == 0 {
 		return nil, nil
 	}
 
-	return values[annotationKey], nil
+	value, ok := entity.Metadata.Annotations[annotationKey]
+	if !ok || value == "" {
+		return nil, nil
+	}
+
+	return value, nil
 }
 
-func mapToKeyValueListTransform(_ context.Context, d *transform.TransformData) (interface{}, error) {
-	values, ok := d.Value.(map[string]string)
-	if !ok || len(values) == 0 {
+func entityMapToKeyValueListTransform(_ context.Context, d *transform.TransformData) (interface{}, error) {
+	entity, ok := d.Value.(backstage.Entity)
+	if !ok {
+		return nil, nil
+	}
+
+	mapName, ok := d.Param.(string)
+	if !ok || mapName == "" {
+		return nil, nil
+	}
+
+	var values map[string]string
+	switch mapName {
+	case "labels":
+		values = entity.Metadata.Labels
+	case "annotations":
+		values = entity.Metadata.Annotations
+	default:
+		return nil, nil
+	}
+	if len(values) == 0 {
 		return nil, nil
 	}
 
@@ -94,13 +117,13 @@ func relationTargetsByTypeTransform(_ context.Context, d *transform.TransformDat
 		return nil, nil
 	}
 
-	relations, ok := d.Value.([]backstage.EntityRelation)
-	if !ok || len(relations) == 0 {
+	entity, ok := d.Value.(backstage.Entity)
+	if !ok || len(entity.Relations) == 0 {
 		return nil, nil
 	}
 
 	targetRefs := make([]string, 0)
-	for _, relation := range relations {
+	for _, relation := range entity.Relations {
 		if relation.Type == relationType && relation.TargetRef != "" {
 			targetRefs = append(targetRefs, relation.TargetRef)
 		}

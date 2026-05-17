@@ -18,8 +18,15 @@ Query software components in your Backstage catalog.
 | annotations | json | Annotations attached to the component |
 | tags | json | A list of tags attached to the component |
 | links | json | A list of external hyperlinks related to the component |
+| type | string | Type of the component |
+| lifecycle | string | Lifecycle state of the component |
 | owner | string | Owner of the component |
 | system | string | System the component belongs to |
+| subcomponent_of | string | Parent component this component is part of |
+| provides_apis | json | APIs provided by this component |
+| consumes_apis | json | APIs consumed by this component |
+| depends_on | json | Entities this component depends on |
+| dependency_of | json | Entities that depend on this component |
 
 ## Examples
 

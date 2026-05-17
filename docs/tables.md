@@ -7,6 +7,7 @@ This document provides details on the tables available in the Backstage plugin f
 | Table Name | Description |
 | --- | --- |
 | [backstage_catalog_entity](tables/backstage_catalog_entity.md) | Generic Backstage entity table |
+| [backstage_catalog_entity_kind](tables/backstage_catalog_entity_kind.md) | Discovered apiVersion/kind combinations |
 | [backstage_catalog_component](tables/backstage_catalog_component.md) | Backstage component table |
 | [backstage_catalog_template](tables/backstage_catalog_template.md) | Backstage template table |
 | [backstage_catalog_api](tables/backstage_catalog_api.md) | Backstage API table |
